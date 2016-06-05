@@ -11,8 +11,7 @@ import com.springguru.springdemo.app.Application;
 @SpringApplicationConfiguration(classes = Application.class)
 public class ApplicationTests {
 
-	@Test
-	public void contextLoads() {
-	}
+  @Test
+  public void contextLoads() {}
 
 }
