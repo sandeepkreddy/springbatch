@@ -9,8 +9,14 @@ import com.springguru.springdemo.domain.Employee;
 public class AccountFieldSetMapper implements FieldSetMapper<Employee> {
 
   @Override
-  public Employee mapFieldSet(FieldSet arg0) throws BindException {
-    return null;
+  public Employee mapFieldSet(FieldSet fieldSet) throws BindException {
+    Employee employee = new Employee();
+    employee.setId(fieldSet.readInt("id"));
+    employee.setName(fieldSet.readString("name"));
+    employee.setAge(fieldSet.readInt("age"));
+    employee.setAddress(fieldSet.readString("address"));
+    employee.setSalary(fieldSet.readBigDecimal("salary"));
+    return employee;
   }
 
 }

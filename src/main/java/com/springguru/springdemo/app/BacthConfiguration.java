@@ -1,6 +1,5 @@
 package com.springguru.springdemo.app;
 
-import javax.batch.api.chunk.ItemReader;
 import javax.sql.DataSource;
 
 import org.springframework.batch.core.Job;
@@ -21,6 +20,7 @@ import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.FixedLengthTokenizer;
 import org.springframework.batch.item.file.transform.Range;
 import org.springframework.batch.item.file.transform.RangeArrayPropertyEditor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -39,6 +39,10 @@ import com.springguru.springdemo.domain.Employee;
 @EnableBatchProcessing
 public class BacthConfiguration {
 
+  @Value("${company.db.query}")
+  private String query;
+  @Value("${file.location}")
+  private String location;
   /**
    * Job configuration
    * 
@@ -58,25 +62,36 @@ public class BacthConfiguration {
   @Bean
   public JobRepository jobRepository() throws Exception {
     JobRepositoryFactoryBean jobRepositoryFactoryBean = new JobRepositoryFactoryBean();
-    jobRepositoryFactoryBean.setDataSource(dataSource());
+    jobRepositoryFactoryBean.setDataSource(batchDataSource());
     jobRepositoryFactoryBean.setTransactionManager(batchTransactionManager());
     jobRepositoryFactoryBean.setIsolationLevelForCreate("ISOLATION_DEFAULT");
     jobRepositoryFactoryBean.afterPropertiesSet();
     return jobRepositoryFactoryBean.getObject();
   }
 
-  @ConfigurationProperties(prefix = "")
+  @ConfigurationProperties(prefix = "batch.db")
   @Bean(name = "batchDataSource")
   @Primary
-  public DataSource dataSource() {
+  public DataSource batchDataSource() {
     return DataSourceBuilder.create().type(DriverManagerDataSource.class).build();
   }
 
+  @Bean(name="companyDataSource")
+  @ConfigurationProperties(prefix="company.db")
+  public DataSource companyDataSource() {
+    return DataSourceBuilder.create().type(DriverManagerDataSource.class).build();
+  }
+  
+  
   @Bean
   public PlatformTransactionManager batchTransactionManager() {
-    return new DataSourceTransactionManager(dataSource());
+    return new DataSourceTransactionManager(batchDataSource());
   }
 
+  @Bean
+  public PlatformTransactionManager companyTransactionManager(){
+    return new DataSourceTransactionManager(companyDataSource());
+  }
   /**
    * Step Configuration
    * 
@@ -100,7 +115,7 @@ public class BacthConfiguration {
   public FlatFileItemReader flatFileItemReaderBean() {
     FlatFileItemReader<Employee> flatFileItemReader = new FlatFileItemReader<>();
     flatFileItemReader.setLineMapper(lineMapper());
-    flatFileItemReader.setResource(new FileSystemResource(""));
+    flatFileItemReader.setResource(new FileSystemResource(location));
     return flatFileItemReader;
   }
 
@@ -131,8 +146,8 @@ public class BacthConfiguration {
     JdbcBatchItemWriter<Employee> jdbcBatchItemWriter = new JdbcBatchItemWriter<>();
     jdbcBatchItemWriter
         .setItemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>());
-    jdbcBatchItemWriter.setSql("");
-    jdbcBatchItemWriter.setDataSource(dataSource());
+    jdbcBatchItemWriter.setSql(query);
+    jdbcBatchItemWriter.setDataSource(companyDataSource());
     return jdbcBatchItemWriter;
   }
 

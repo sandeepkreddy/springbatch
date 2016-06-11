@@ -1,0 +1,35 @@
+spring:
+  profiles:
+    active: local
+  batch:
+    job:
+      enabled: false
+jasypt: 
+ encryptor:
+  password: ENC()
+server:
+  port: 8090
+  host: localhost
+database:
+ schema: personal            
+---    
+spring:
+  profiles: local
+file:
+ properties:
+  fieldNames: id,name,age,address,salary
+  fieldRanges:  1-2,3-9,10-11,12-14,15-16
+ location: "/Users/sandeepreddy/Documents/companydetails.txt"
+batch:
+ db:
+  driverClassName: org.postgresql.Driver
+  url: jdbc:postgresql://localhost:5432/personal
+  userName: postgres
+  password: password
+company:
+ db:
+  driverClassName: org.postgresql.Driver 
+  url: jdbc:postgresql://localhost:5433/personal
+  userName: postgres
+  password: password
+  query: Insert into {database.schema}.company (id,name,age,address,salary) VALUES (:id,:name,:age,:address,:salary)
